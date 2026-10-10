@@ -10,6 +10,11 @@ A real-time messaging application built with React, Express, MongoDB, and Socket
 - Authenticate users with JWT cookies
 - Store users in MongoDB
 
+<img width="798" height="716" alt="スクリーンショット 2026-10-10 122135" src="https://github.com/user-attachments/assets/f18c0275-8c65-4d5a-98a0-6b8b009cf9f6" />
+<img width="1032" height="687" alt="スクリーンショット 2026-10-10 122122" src="https://github.com/user-attachments/assets/ccfd4f7a-4a59-42da-83f7-593e889dfd93" />
+<img width="1035" height="789" alt="スクリーンショット 2026-10-10 122112" src="https://github.com/user-attachments/assets/1469513e-1cd3-4059-8d58-eeeba48cc17a" />
+
+
 ## Project Structure
 
 ```text
