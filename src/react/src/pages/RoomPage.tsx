@@ -1,4 +1,4 @@
-import React, { useState, type SetStateAction, type SubmitEventHandler } from 'react';
+import { useState } from 'react';
 import { LuLogIn, LuHash, LuArrowRight, LuListCheck } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 

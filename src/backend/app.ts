@@ -2,13 +2,36 @@ import express from 'express'
 import cors from 'cors'
 import { createServer } from 'node:http';
 import { Server, Socket } from 'socket.io'
-import { data } from 'react-router';
+import { userRouter } from './routes/userRoutes.js';
+import cookieParser from 'cookie-parser';
+import { checkForAuthCookie } from './middleware/authentication.js'
+import { config } from 'dotenv';
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import mongoose from "mongoose";
+
+config({
+    path: resolve(dirname(fileURLToPath(import.meta.url)), "../../.env"),
+});
+
+mongoose.connect(process.env.MONGODB_CONNECTION!)
+    .then(() => console.log("Connected to mongodb"))
+    .catch((error) => console.error("MongoDB connection failed:", error));
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-const port: string = process.env.PORT || '8000';
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(checkForAuthCookie("token"));
+app.use('/user', userRouter);
+
+
+const port: string = process.env.PORT!;
 
 const httpServer = createServer(app); // let typescript infer type cuz i cant find the type
 
@@ -31,9 +54,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send_message', (data) => {
-        console.log(`Message for room ${data.room}: `, data.message);
+        console.log(`Message for room ${data.room} from ${data.author}: `, data.message);
         // only broadcast to that room
-        socket.to(data.room).emit('receive_message', {author: data.sender, text: data.message});
+        socket.to(data.room).emit('receive_message', {author: data.author, text: data.message});
     })
 
     socket.on('leave_room', (roomId) => {

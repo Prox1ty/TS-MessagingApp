@@ -1,20 +1,48 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ChatBubble from "../components/ChatBubble";
 import { type Message } from "../types";
 import { socket } from "../socket/socket";
+import { useUser } from "../context/userContext"; 
 
 function ChatRoom() {
-  const [isConnected, setIsConnected] = useState(socket.connected);
-
+  const isConnected = socket.connected;
   const { roomId } = useParams();
+  const [inputText, setInputText] = useState<string>("");
+  const { user, setUser } = useUser()!;
+  
+  useEffect(() => {
+    const fetchUser = async () => {
+      const newRes = await fetch('http://localhost:8000/user/me', {
+        credentials: 'include',
+      });
+      if (!newRes.ok) throw new Error('Error setting user object');
+      const userObj = await newRes.json();
+      setUser(userObj);
+    };
+
+    void fetchUser();
+  }, [setUser]);
+
+  const [messages, setMessages] = useState([
+    {
+      id: "init-1",
+      sender: "System",
+      text: `Connected to room #${roomId}. Send a message to start chatting!`,
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    },
+  ]);
+  const chatEndRef: any = useRef(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!socket.connected)
+    if (!socket.connected) {
       socket.connect();
-
-    setIsConnected(true);
+    }
 
     socket.emit('join_room', roomId);
 
@@ -37,24 +65,11 @@ function ChatRoom() {
     return () => {
       socket.emit("leave_room", roomId);
       socket.off("receive_message", onMessageReceived);
+      socket.disconnect();
     }
     
   }, [roomId]);
 
-  const [messages, setMessages] = useState([
-    {
-      id: "init-1",
-      sender: "System",
-      text: `Connected to room #${roomId}. Send a message to start chatting!`,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    },
-  ]);
-
-  const [inputText, setInputText] = useState<string>("");
-  const chatEndRef: any = useRef(null);
 
   // for auto scroll
   useEffect(() => {
@@ -81,7 +96,7 @@ function ChatRoom() {
 
     socket.emit("send_message", {
       room: roomId,
-      author: "someone",
+      author: user?.name ?? "someone",
       message: trimmed
     });
   };
@@ -94,8 +109,8 @@ function ChatRoom() {
         <header className="px-5 py-3.5 bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`}></span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${isConnected ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
             </span>
             <div>
               <h2 className="font-semibold text-zinc-100 text-sm flex items-center gap-1.5">

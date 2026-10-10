@@ -1,6 +1,3 @@
-import React from 'react'
-
-
 function Navbar() {
   return (
       <nav className="w-full flex flex-row justify-between h-8 bg-zinc-950 text-white">
